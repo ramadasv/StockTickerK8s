@@ -1,0 +1,91 @@
+# Configmap - configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stocktickerk8config
+data:
+  SYMBOL: MSFT
+  NDAYS: '7'
+
+---
+
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stocktickerk8
+  labels:
+    app: stocktickerk8
+  name: stocktickerk8
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stocktickerk8
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: stocktickerk8
+    spec:
+      containers:
+      - name: stocktickerk8
+        image: docker.io/ramadasdocker/stocktickerk8:1.0
+        imagePullPolicy: Always
+        env:
+          - name: ALPHA_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: stockticker-api-key
+                key: ALPHA_API_KEY
+          - name: ALPHA_SYMBOL
+            valueFrom:
+              configMapKeyRef:
+                name: stocktickerk8config
+                key: SYMBOL
+          - name: ALPHA_NDAYS
+            valueFrom:
+              configMapKeyRef:
+                name: stocktickerk8config
+                key: NDAYS
+status: {}
+
+---
+
+
+# Service - service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: stocktickerk8
+  labels:
+    run: stocktickerk8
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: stocktickerk8
+  type: ClusterIP
+
+---
+# Ingress - ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stocktickerk8
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: stocktickerk8
+            port:
+              number: 5000
