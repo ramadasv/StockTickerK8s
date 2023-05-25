@@ -9,7 +9,7 @@ data:
 
 ---
 
-# Deployment
+# Deployment - deployment.yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,20 +30,20 @@ spec:
     spec:
       containers:
       - name: stocktickerk8
-        image: docker.io/ramadasdocker/stocktickerk8:1.0
+        image: docker.io/ramadasdocker/stocktickerk8:1.1
         imagePullPolicy: Always
         env:
-          - name: ALPHA_API_KEY
+          - name: ALPHA_API_KEY # Env var from Secret
             valueFrom:
               secretKeyRef:
                 name: stockticker-api-key
                 key: ALPHA_API_KEY
-          - name: ALPHA_SYMBOL
+          - name: ALPHA_SYMBOL # Env var from ConfigMap
             valueFrom:
               configMapKeyRef:
                 name: stocktickerk8config
                 key: SYMBOL
-          - name: ALPHA_NDAYS
+          - name: ALPHA_NDAYS # Env var from ConfigMap
             valueFrom:
               configMapKeyRef:
                 name: stocktickerk8config
@@ -51,7 +51,6 @@ spec:
 status: {}
 
 ---
-
 
 # Service - service.yaml
 apiVersion: v1
